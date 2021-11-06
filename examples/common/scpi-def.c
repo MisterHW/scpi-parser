@@ -41,6 +41,12 @@
 #include "scpi/scpi.h"
 #include "scpi-def.h"
 
+scpi_bool_t prepend_command_to_result = false;
+
+size_t PrependCommandToResult(scpi_t * context){
+    return prepend_command_to_result ? SCPI_ResultCommand(context) : 0;
+}
+
 static scpi_result_t DMM_MeasureVoltageDcQ(scpi_t * context) {
     scpi_number_t param1, param2;
     char bf[15];
@@ -64,6 +70,7 @@ static scpi_result_t DMM_MeasureVoltageDcQ(scpi_t * context) {
     SCPI_NumberToStr(context, scpi_special_numbers_def, &param2, bf, 15);
     fprintf(stderr, "\tP2=%s\r\n", bf);
 
+    PrependCommandToResult(context);
     SCPI_ResultDouble(context, 0);
 
     return SCPI_RES_OK;
@@ -92,6 +99,7 @@ static scpi_result_t DMM_MeasureVoltageAcQ(scpi_t * context) {
     SCPI_NumberToStr(context, scpi_special_numbers_def, &param2, bf, 15);
     fprintf(stderr, "\tP2=%s\r\n", bf);
 
+    PrependCommandToResult(context);
     SCPI_ResultDouble(context, 0);
 
     return SCPI_RES_OK;
@@ -114,6 +122,21 @@ static scpi_result_t DMM_ConfigureVoltageDc(scpi_t * context) {
     fprintf(stderr, "\tP1=%lf\r\n", param1);
     fprintf(stderr, "\tP2=%lf\r\n", param2);
 
+    return SCPI_RES_OK;
+}
+
+static scpi_result_t DMM_SetPrependCommandToResponse(scpi_t * context) {
+    scpi_bool_t param1;
+    if (!SCPI_ParamBool(context, &param1, TRUE)) {
+        return SCPI_RES_ERR;
+    }
+    prepend_command_to_result = param1;
+    return SCPI_RES_OK;
+}
+
+static scpi_result_t DMM_PrependCommandToResponseQ(scpi_t * context) {
+    BSICS_PrependCommandToResult(context);
+    SCPI_ResultBool(context,  prepend_command_to_result);
     return SCPI_RES_OK;
 }
 
@@ -150,6 +173,7 @@ static scpi_result_t TEST_ChoiceQ(scpi_t * context) {
     SCPI_ChoiceToName(trigger_source, param, &name);
     fprintf(stderr, "\tP1=%s (%ld)\r\n", name, (long int) param);
 
+    PrependCommandToResult(context);
     SCPI_ResultInt32(context, param);
 
     return SCPI_RES_OK;
@@ -183,6 +207,7 @@ static scpi_result_t TEST_ArbQ(scpi_t * context) {
     size_t len;
 
     if (SCPI_ParamArbitraryBlock(context, &data, &len, FALSE)) {
+        PrependCommandToResult(context);
         SCPI_ResultArbitraryBlock(context, data, len);
     }
 
@@ -347,7 +372,7 @@ static scpi_result_t TEST_Chanlst(scpi_t *context) {
  * Return SCPI_RES_OK
  */
 static scpi_result_t My_CoreTstQ(scpi_t * context) {
-
+    PrependCommandToResult(context);
     SCPI_ResultInt32(context, 0);
 
     return SCPI_RES_OK;
@@ -400,6 +425,8 @@ const scpi_command_t scpi_commands[] = {
     {.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
 
     {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
+    {.pattern = "SYSTem:COMMunication:PREPend[:ENAble]", .callback = DMM_SetPrependCommandToResponse,},
+    {.pattern = "SYSTem:COMMunication:PREPend[:ENAble]?", .callback = DMM_PrependCommandToResponseQ,},
 
     {.pattern = "TEST:BOOL", .callback = TEST_Bool,},
     {.pattern = "TEST:CHOice?", .callback = TEST_ChoiceQ,},
