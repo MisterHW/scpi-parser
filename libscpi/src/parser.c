@@ -665,6 +665,22 @@ size_t SCPI_ResultBool(scpi_t * context, scpi_bool_t val) {
     return resultUInt32BaseSign(context, val ? 1 : 0, 10, FALSE);
 }
 
+/**
+ * Write current command string to the result
+ * @param context
+ * @return
+ */
+size_t SCPI_ResultCommand(scpi_t * context) {
+    size_t trim_right = 0;
+    if(*(char*)(context->param_list.cmd_raw.data + context->param_list.cmd_raw.length - 1) == '?') {
+        trim_right = 1;
+    }
+    return SCPI_ResultCharacters (
+        context,
+        context->param_list.cmd_raw.data + context->param_list.cmd_raw.position,
+        context->param_list.cmd_raw.length - trim_right );
+}
+
 /* parsing parameters */
 
 /**

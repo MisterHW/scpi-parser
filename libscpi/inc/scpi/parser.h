@@ -80,6 +80,7 @@ extern "C" {
     size_t SCPI_ResultArbitraryBlockHeader(scpi_t * context, size_t len);
     size_t SCPI_ResultArbitraryBlockData(scpi_t * context, const void * data, size_t len);
     size_t SCPI_ResultBool(scpi_t * context, scpi_bool_t val);
+    size_t SCPI_ResultCommand(scpi_t * context);
 
     size_t SCPI_ResultArrayInt8(scpi_t * context, const int8_t * array, size_t count, scpi_array_format_t format);
     size_t SCPI_ResultArrayUInt8(scpi_t * context, const uint8_t * array, size_t count, scpi_array_format_t format);
